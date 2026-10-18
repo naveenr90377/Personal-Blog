@@ -1,0 +1,147 @@
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const { initializeApp, cert } = require("firebase-admin/app");
+const { getAuth } = require("firebase-admin/auth");
+const fs = require("fs");
+const path = require("path");
+
+const app = express();
+const PORT = 5000;
+
+const ADMIN_UID = "dAMJSuCCkkOoIrBySbgYt2QOiZA3";
+
+const serviceAccountPath = path.join(__dirname, "serviceAccountKey.json");
+let serviceAccount;
+
+try {
+  const fileContent = fs.readFileSync(serviceAccountPath, "utf8");
+  serviceAccount = JSON.parse(fileContent);
+} catch (error) {
+  console.error(" Error reading serviceAccountKey.json:", error.message);
+  process.exit(1);
+}
+
+initializeApp({
+  credential: cert(serviceAccount),
+});
+
+
+app.use(cors());
+app.use(express.json());
+
+
+mongoose
+  .connect("mongodb://127.0.0.1:27017/blogDB")
+  .then(() => {
+    console.log(" MongoDB connected successfully");
+  })
+  .catch((error) => {
+    console.error("MongoDB connection failed:", error.message);
+  });
+
+
+const blogSchema = new mongoose.Schema(
+  {
+    newTitle: { type: String, required: true, trim: true },
+    newContent: { type: String, required: true, trim: true },
+    date: {
+      type: String,
+      default: () =>
+        new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+    },
+    likes: { type: Number, default: 0, min: 0 },
+  },
+  { timestamps: true }
+);
+
+const Blog = mongoose.model("Blog", blogSchema);
+
+
+async function verifyFirebaseUser(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Please log in first." });
+    }
+    const token = authHeader.split(" ")[1];
+    const decodedToken = await getAuth().verifyIdToken(token);
+    req.user = decodedToken;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid or expired login session." });
+  }
+}
+
+function verifyAdmin(req, res, next) {
+  if (req.user.uid !== ADMIN_UID) {
+    return res.status(403).json({ message: "Only the admin can manage blogs." });
+  }
+  next();
+}
+
+app.get("/api/blogs", async (req, res) => {
+  try {
+    const blogs = await Blog.find().sort({ createdAt: -1 });
+    res.json(blogs);
+  } catch (error) {
+    res.status(500).json({ message: "Unable to fetch blogs." });
+  }
+});
+
+app.post("/api/blogs", verifyFirebaseUser, verifyAdmin, async (req, res) => {
+  try {
+    const { newTitle, newContent } = req.body;
+    const blog = await Blog.create({ newTitle, newContent, likes: 0 });
+    res.status(201).json(blog);
+  } catch (error) {
+    res.status(500).json({ message: "Unable to add blog." });
+  }
+});
+
+app.put("/api/blogs/:id", verifyFirebaseUser, verifyAdmin, async (req, res) => {
+  try {
+    const { newTitle, newContent } = req.body;
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      req.params.id,
+      { newTitle, newContent },
+      { new: true }
+    );
+    res.json(updatedBlog);
+  } catch (error) {
+    res.status(500).json({ message: "Unable to edit blog." });
+  }
+});
+
+app.delete("/api/blogs/:id", verifyFirebaseUser, verifyAdmin, async (req, res) => {
+  try {
+    await Blog.findByIdAndDelete(req.params.id);
+    res.json({ message: "Blog deleted successfully." });
+  } catch (error) {
+    res.status(500).json({ message: "Unable to delete blog." });
+  }
+});
+
+app.patch("/api/blogs/like/:id", async (req, res) => {
+  try {
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { likes: 1 } },
+      { new: true }
+    );
+    res.json(updatedBlog);
+  } catch (error) {
+    res.status(500).json({ message: "Unable to like blog." });
+  }
+});
+
+
+mongoose.connection.once("open", () => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+});

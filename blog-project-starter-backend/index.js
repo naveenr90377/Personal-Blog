@@ -7,40 +7,50 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
+// ⚠️ REPLACE THIS WITH YOUR ACTUAL ADMIN UID FROM FIREBASE CONSOLE
 const ADMIN_UID = "dAMJSuCCkkOoIrBySbgYt2QOiZA3";
 
-const serviceAccountPath = path.join(__dirname, "serviceAccountKey.json");
+// 1. Load Service Account Key from Environment Variable (Render) or File (Local)
 let serviceAccount;
 
 try {
-  const fileContent = fs.readFileSync(serviceAccountPath, "utf8");
-  serviceAccount = JSON.parse(fileContent);
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    // Use the environment variable (for Render deployment)
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    console.log("✅ Firebase Service Account loaded from Environment Variable");
+  } else {
+    // Fallback for local development
+    const fileContent = fs.readFileSync(path.join(__dirname, "serviceAccountKey.json"), "utf8");
+    serviceAccount = JSON.parse(fileContent);
+    console.log("✅ Firebase Service Account loaded from local file");
+  }
 } catch (error) {
-  console.error(" Error reading serviceAccountKey.json:", error.message);
+  console.error("❌ Error loading Firebase service account:", error.message);
   process.exit(1);
 }
 
+// 2. Initialize Firebase Admin
 initializeApp({
   credential: cert(serviceAccount),
 });
 
-
+// 3. Middleware
 app.use(cors());
 app.use(express.json());
 
-
+// 4. MongoDB Connection (Uses Render Env Var, falls back to local)
 mongoose
-  .connect("mongodb://127.0.0.1:27017/blogDB")
+  .connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/blogDB")
   .then(() => {
-    console.log(" MongoDB connected successfully");
+    console.log("✅ MongoDB connected successfully");
   })
   .catch((error) => {
-    console.error("MongoDB connection failed:", error.message);
+    console.error("❌ MongoDB connection failed:", error.message);
   });
 
-
+// 5. Blog Schema
 const blogSchema = new mongoose.Schema(
   {
     newTitle: { type: String, required: true, trim: true },
@@ -61,7 +71,7 @@ const blogSchema = new mongoose.Schema(
 
 const Blog = mongoose.model("Blog", blogSchema);
 
-
+// 6. Middleware: Verify Firebase User
 async function verifyFirebaseUser(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
@@ -77,6 +87,7 @@ async function verifyFirebaseUser(req, res, next) {
   }
 }
 
+// 7. Middleware: Verify Admin
 function verifyAdmin(req, res, next) {
   if (req.user.uid !== ADMIN_UID) {
     return res.status(403).json({ message: "Only the admin can manage blogs." });
@@ -84,6 +95,7 @@ function verifyAdmin(req, res, next) {
   next();
 }
 
+// 8. Routes
 app.get("/api/blogs", async (req, res) => {
   try {
     const blogs = await Blog.find().sort({ createdAt: -1 });
@@ -139,7 +151,7 @@ app.patch("/api/blogs/like/:id", async (req, res) => {
   }
 });
 
-
+// 9. Start Server
 mongoose.connection.once("open", () => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);

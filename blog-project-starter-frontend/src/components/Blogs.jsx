@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { auth } from '../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
+// ✅ LIVE BACKEND URL
+const BACKEND_URL = 'https://blog-portfolio-backend-n0r1.onrender.com';
+
 function Blogs() {
     const [blogs, setBlogs] = useState([]);
     const [newTitle, setNewTitle] = useState('');
@@ -12,11 +15,10 @@ function Blogs() {
     const [editTitle, setEditTitle] = useState('');
     const [editContent, setEditContent] = useState('');
 
-  
+    // ⚠️ REPLACE THIS WITH YOUR ACTUAL ADMIN UID FROM FIREBASE CONSOLE
     const ADMIN_UID = "dAMJSuCCkkOoIrBySbgYt2QOiZA3";
 
     useEffect(() => {
-      
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
             if (currentUser && currentUser.uid === ADMIN_UID) {
@@ -32,7 +34,7 @@ function Blogs() {
 
     const fetchBlogs = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/blogs');
+            const response = await fetch(`${BACKEND_URL}/api/blogs`);
             const data = await response.json();
             setBlogs(data);
         } catch (error) {
@@ -55,7 +57,7 @@ function Blogs() {
 
         try {
             const token = await user.getIdToken();
-            const response = await fetch('http://localhost:5000/api/blogs', {
+            const response = await fetch(`${BACKEND_URL}/api/blogs`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -89,7 +91,7 @@ function Blogs() {
 
         try {
             const token = await user.getIdToken();
-            const response = await fetch(`http://localhost:5000/api/blogs/${editingBlog}`, {
+            const response = await fetch(`${BACKEND_URL}/api/blogs/${editingBlog}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -120,7 +122,7 @@ function Blogs() {
 
         try {
             const token = await user.getIdToken();
-            const response = await fetch(`http://localhost:5000/api/blogs/${id}`, {
+            const response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -141,7 +143,7 @@ function Blogs() {
 
     const handleLikeBlog = async (id) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/blogs/like/${id}`, {
+            const response = await fetch(`${BACKEND_URL}/api/blogs/like/${id}`, {
                 method: 'PATCH'
             });
 
@@ -162,7 +164,7 @@ function Blogs() {
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-4xl font-bold text-center mb-8">
-                Latest Blogs 
+                Latest Blogs 📚
             </h1>
 
             {isAdmin && user && (
@@ -172,18 +174,18 @@ function Blogs() {
                     </h2>
                     <form onSubmit={editingBlog ? handleUpdateBlog : handleAddBlog}>
                         <input
-                 type="text"
-               placeholder="Blog Title"
-                value={editingBlog ? editTitle : newTitle}
+                            type="text"
+                            placeholder="Blog Title"
+                            value={editingBlog ? editTitle : newTitle}
                             onChange={(e) => editingBlog ? setEditTitle(e.target.value) : setNewTitle(e.target.value)}
                             required
-                 className="w-full p-3 mb-4 border rounded-lg"
+                            className="w-full p-3 mb-4 border rounded-lg"
                         />
                         <textarea
-                placeholder="Blog Content"
-value={editingBlog ? editContent : newContent}
-                     onChange={(e) => editingBlog ? setEditContent(e.target.value) : setNewContent(e.target.value)}
-                required
+                            placeholder="Blog Content"
+                            value={editingBlog ? editContent : newContent}
+                            onChange={(e) => editingBlog ? setEditContent(e.target.value) : setNewContent(e.target.value)}
+                            required
                             rows="5"
                             className="w-full p-3 mb-4 border rounded-lg"
                         ></textarea>
@@ -191,11 +193,11 @@ value={editingBlog ? editContent : newContent}
                             <button
                                 type="submit"
                                 className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition"
->
+                            >
                                 {editingBlog ? 'Update Blog' : 'Add Blog'}
                             </button>
                             {editingBlog && (
-                        <button
+                                <button
                                     type="button"
                                     onClick={cancelEdit}
                                     className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
@@ -225,20 +227,19 @@ value={editingBlog ? editContent : newContent}
                             <span className="text-gray-600">{blog.likes || 0} Likes</span>
                         </div>
 
-    
                         {isAdmin && user && (
                             <div className="flex gap-2 mt-4 pt-4 border-t">
                                 <button
                                     onClick={() => handleEditBlog(blog)}
                                     className="flex-1 bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 transition"
                                 >
-                                Edit
+                                    ✏️ Edit
                                 </button>
                                 <button
                                     onClick={() => handleDeleteBlog(blog._id)}
                                     className="flex-1 bg-red-500 text-white py-2 rounded hover:bg-red-600 transition"
                                 >
-                                Delete
+                                    🗑️ Delete
                                 </button>
                             </div>
                         )}

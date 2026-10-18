@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { auth } from '../config/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import './common/Navbar.css';
 
 // Import images
@@ -15,15 +13,6 @@ import mongo from '../assets/p2.png';
 import firebase from '../assets/p3.png';
 
 function Home() {
-    const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-        });
-        return () => unsubscribe();
-    }, []);
-
     return (
         <div className="home-container">
             {/* Hero Section */}

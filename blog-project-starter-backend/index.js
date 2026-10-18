@@ -32,12 +32,15 @@ initializeApp({
   credential: cert(serviceAccount),
 });
 
-// 3. ✅ ROBUST CORS CONFIGURATION (Fixes the Vercel <-> Render block)
+// 3. ✅ BULLETPROOF CORS CONFIGURATION (Fixes the Vercel block)
 app.use(cors({
   origin: "*", // Allows requests from your Vercel frontend
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "Accept"]
 }));
+// ✅ Handle preflight OPTIONS requests explicitly
+app.options("*", cors());
+
 app.use(express.json());
 
 // 4. MongoDB Connection

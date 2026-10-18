@@ -1,6 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
+const cors = require("cors"); // ✅ Required for CORS
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const fs = require("fs");
@@ -9,19 +9,15 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ⚠️ REPLACE THIS WITH YOUR ACTUAL ADMIN UID FROM FIREBASE CONSOLE
 const ADMIN_UID = "dAMJSuCCkkOoIrBySbgYt2QOiZA3";
 
-// 1. Load Service Account Key from Environment Variable (Render) or File (Local)
+// 1. Load Service Account Key
 let serviceAccount;
-
 try {
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    // Use the environment variable (for Render deployment)
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     console.log("✅ Firebase Service Account loaded from Environment Variable");
   } else {
-    // Fallback for local development
     const fileContent = fs.readFileSync(path.join(__dirname, "serviceAccountKey.json"), "utf8");
     serviceAccount = JSON.parse(fileContent);
     console.log("✅ Firebase Service Account loaded from local file");
@@ -36,11 +32,15 @@ initializeApp({
   credential: cert(serviceAccount),
 });
 
-// 3. Middleware
-app.use(cors());
+// 3. ✅ ROBUST CORS CONFIGURATION (Fixes the Vercel <-> Render block)
+app.use(cors({
+  origin: "*", // Allows requests from your Vercel frontend
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json());
 
-// 4. MongoDB Connection (Uses Render Env Var, falls back to local)
+// 4. MongoDB Connection
 mongoose
   .connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/blogDB")
   .then(() => {

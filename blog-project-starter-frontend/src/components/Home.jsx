@@ -1,111 +1,81 @@
-import React from 'react'
-import Navbar from './common/Navbar'
-import BlogProfileImage from "../assets/Blog Website Design.jpg"
-import CSS from "../assets/css-3.png"
-import HTML from "../assets/html.png"
-import DB from "../assets/data-server.png"
-import JS from "../assets/js.png"
-import REACTICON from "../assets/physics.png"
-import NODE from "../assets/node-js.png"
-import P1 from "../assets/p1.jpg"
-import P2 from "../assets/p2.png"
-import P3 from "../assets/p3.png"
-import BlogImage from "../assets/blogImage.png"
-import { useNavigate } from 'react-router-dom';
-import Footer from './common/Footer'
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { auth } from '../config/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import './common/Navbar.css';
+
+// Import images
+import blogImage from '../assets/blogImage.png';
+import html from '../assets/html.png';
+import css from '../assets/css-3.png';
+import js from '../assets/js.png';
+import react from '../assets/p1.jpg';
+import node from '../assets/node-js.png';
+import mongo from '../assets/p2.png';
+import firebase from '../assets/p3.png';
 
 function Home() {
-    const navigate = useNavigate()
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+        });
+        return () => unsubscribe();
+    }, []);
+
     return (
-        <div>
-
-            <div className='flex items-center justify-center'>
-                <div className="w-full sm:w-1/2 flex-col justify-center">
-                    <h2 className='text-3xl md:text-6xl font-bold pb-2'>Hy! I Am</h2>
-                    <h2 className='text-4xl md:text-7xl font-bold text-orange-400 py-2'>Naveen R</h2>
-                    <img src={BlogProfileImage} className='w-60 block sm:hidden' alt="Blog Profile Image" />
-                    <p className='py-2'>I can create stunning website for your company, Do check my works. I won't disappoint you. Try me for 7 Days before you decide anything.</p>
-                    <button className='button-style mt-2'>Hire Me</button>
+        <div className="home-container">
+            {/* Hero Section */}
+            <div className="hero-section">
+                <div className="hero-content">
+                    <h1>Welcome to My Blog</h1>
+                    <p>Exploring the world of web development, one post at a time.</p>
+                    <Link to="/blogs" className="cta-button">
+                        View Blogs
+                    </Link>
                 </div>
-                <div className='justify-center hidden sm:block'>
-                    <img src={BlogProfileImage} className='w-60 md:w-96 ' alt="Blog Profile Image" />
-
+                <div className="hero-image">
+                    <img src={blogImage} alt="Blog illustration" />
                 </div>
-
             </div>
 
-
-            <div className='flex justify-evenly py-6'>
-                <img src={HTML} style={{ width: "50px" }} />
-                <img src={CSS} style={{ width: "50px" }} />
-                <img src={JS} style={{ width: "50px" }} />
-                <img src={REACTICON} style={{ width: "50px" }} />
-                <img src={DB} style={{ width: "50px" }} />
-                <img src={NODE} style={{ width: "50px" }} />
-            </div>
-
-            <div className='flex flex-col mt-10 items-center justify-around sm:flex-row'>
-                <div className='flex-col'>
-                    <div className='mt-4 border-[6px] rounded-lg border-purple-500 p-5 border-t-0 w-60 flex-col items-center'>
-                        <div className='rounded-full border-2 p-5 font-bold text-white text-center bg-gradient-to-br from-purple-200 to-purple-600'>6</div>
-                        <p className='text-center font-medium'>Projects Completed</p>
+            {/* Skills Section */}
+            <div className="skills-section">
+                <h2>Technologies I Use</h2>
+                <div className="skills-grid">
+                    <div className="skill-card">
+                        <img src={html} alt="HTML5" />
+                        <span>HTML5</span>
                     </div>
-                    <div className='mt-4 border-[6px] rounded-lg border-green-500 p-5 border-t-0 w-60 flex-col items-center'>
-                        <div className='rounded-full border-2 p-5 font-bold text-white text-center bg-gradient-to-br from-green-200 to-green-600'>6</div>
-
-                        <p className='text-center font-medium'>Months of Experience</p>
+                    <div className="skill-card">
+                        <img src={css} alt="CSS3" />
+                        <span>CSS3</span>
+                    </div>
+                    <div className="skill-card">
+                        <img src={js} alt="JavaScript" />
+                        <span>JavaScript</span>
+                    </div>
+                    <div className="skill-card">
+                        <img src={react} alt="React" />
+                        <span>React</span>
+                    </div>
+                    <div className="skill-card">
+                        <img src={node} alt="Node.js" />
+                        <span>Node.js</span>
+                    </div>
+                    <div className="skill-card">
+                        <img src={mongo} alt="MongoDB" />
+                        <span>MongoDB</span>
+                    </div>
+                    <div className="skill-card">
+                        <img src={firebase} alt="Firebase" />
+                        <span>Firebase</span>
                     </div>
                 </div>
-
-                <div className='ml-4 mt-4 sm:mt-0'>
-                    <h2 className='text-3xl sm:text-7xl font-bold'>My Awesome</h2>
-                    <h2 className='text-3xl sm:text-7xl font-bold text-orange-400'>Services</h2>
-                    <p className='my-2'>I have attahed my Resume here for your Reference</p>
-                    <button className='button-style mt-2'>Download CV</button>
-
-                </div>
-
-
-
-
             </div>
-
-            <div>
-                <h2 className='text-center text-5xl my-14 font-bold'>Checkout My Live <span className='text-orange-400'>Projects</span> Here</h2>
-                <div className='flex justify-around my-5 flex-col sm:flex-row'>
-
-                    <img src={P1} className='w-64 border rounded-md cursor-pointer' alt="" />
-
-                    <img src={P2} className='w-64 border rounded-md cursor-pointer' alt="" />
-
-                    <img src={P3} className='w-64 border rounded-md cursor-pointer' alt="" />
-
-                </div>
-            </div>
-
-
-            <div className='flex items-center justify-center my-14'>
-                <div className='justify-center hidden sm:block'>
-                    <img src={BlogImage} className='w-60 md:w-96 ' alt="Blog Profile Image" />
-
-                </div>
-                <div className="w-full sm:w-1/2 flex-col justify-center ml-6">
-                    <h2 className='text-3xl md:text-6xl font-bold pb-2'>I like to Write</h2>
-                    <h2 className='text-4xl md:text-7xl font-bold text-orange-400 py-2'>Blogs about tech</h2>
-
-                    <p className='py-2'>You can know better about me by reading my blogs here. I share my expertise here.</p>
-                    <button className='button-style mt-2' onClick={() => navigate("/blogs")}>Read My Blogs</button>
-                </div>
-
-
-            </div>
-
-
-            <Footer/>
-
-
         </div>
-    )
+    );
 }
 
-export default Home
+export default Home;
